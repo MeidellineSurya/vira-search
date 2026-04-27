@@ -41,7 +41,7 @@ export async function GET(
       )
     `)
     .eq('campaign_id', id)
-    .order('applied_at', { ascending: false })
+    .order('ai_fit_score', { ascending: false, nullsFirst: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ applicants: data ?? [] })

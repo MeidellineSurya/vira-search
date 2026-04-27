@@ -1,9 +1,5 @@
 'use client'
 
-// src/app/page.tsx
-// VIRA Landing Page
-// Aesthetic: editorial luxury — tight typography, amber accents, precise motion
-
 import { useEffect, useRef, useState } from 'react'
 
 const MARQUEE_ITEMS = [
@@ -16,30 +12,42 @@ function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
+    const el = ref.current; if (!el) return
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true) }, { threshold })
-    obs.observe(el)
-    return () => obs.disconnect()
+    obs.observe(el); return () => obs.disconnect()
   }, [threshold])
   return { ref, inView }
 }
 
-function FadeIn({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
+function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const { ref, inView } = useInView()
   return (
-    <div ref={ref} className={className} style={{
+    <div ref={ref} style={{
       opacity: inView ? 1 : 0,
-      transform: inView ? 'translateY(0)' : 'translateY(24px)',
-      transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
-    }}>
-      {children}
-    </div>
+      transform: inView ? 'translateY(0)' : 'translateY(20px)',
+      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+    }}>{children}</div>
   )
 }
 
+const s = {
+  primary:      '#0EA5E9',
+  primaryLight: '#38BDF8',
+  primaryDark:  '#0284C7',
+  secondary:    '#F0F9FF',
+  accent:       '#DDF4FF',
+  bg:           '#FFFFFF',
+  bgMuted:      '#F1F5F9',
+  border:       '#E2E8F0',
+  text:         '#1E293B',
+  muted:        '#64748B',
+  faint:        '#94A3B8',
+  shadow:       '0 4px 24px rgba(14,165,233,0.14)',
+  shadowCard:   '0 2px 12px rgba(30,41,59,0.08)',
+}
+
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled]       = useState(false)
   const [heroVisible, setHeroVisible] = useState(false)
 
   useEffect(() => {
@@ -49,348 +57,206 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const s = {
-    // colours
-    bg:       '#080808',
-    surface:  '#111111',
-    border:   '#1c1c1c',
-    amber:    '#d4a847',
-    amberDim: '#8a6c2a',
-    text:     '#f0ede8',
-    muted:    '#5a5855',
-    faint:    '#2a2826',
-
-    // type
-    display: '"Playfair Display", Georgia, serif',
-    body:    '"DM Sans", "Helvetica Neue", sans-serif',
-  }
-
   return (
-    <div style={{ background: s.bg, color: s.text, fontFamily: s.body, overflowX: 'hidden' }}>
+    <div style={{ background: s.bg, color: s.text, fontFamily: '"DM Sans", sans-serif', overflowX: 'hidden' }}>
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      {/* Nav */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: '0 40px', height: 60,
+        padding: '0 40px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
+        background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
         borderBottom: scrolled ? `1px solid ${s.border}` : '1px solid transparent',
-        transition: 'all 0.4s ease',
+        transition: 'all 0.3s ease',
       }}>
-        <span style={{ fontFamily: s.display, fontSize: 22, fontWeight: 700, letterSpacing: '0.05em', color: s.text }}>
+        <span style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, fontWeight: 700, color: s.primary, letterSpacing: '0.04em' }}>
           VIRA
         </span>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-          <a href="/search"    style={{ fontSize: 13, color: s.muted, textDecoration: 'none', transition: 'color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = s.text)}
-            onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>
-            Search
-          </a>
-          <a href="/campaigns" style={{ fontSize: 13, color: s.muted, textDecoration: 'none', transition: 'color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = s.text)}
-            onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>
-            Campaigns
-          </a>
-          <a href="/login" style={{ fontSize: 13, color: s.muted, textDecoration: 'none', transition: 'color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = s.text)}
-            onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>
-            Log in
-          </a>
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+          {[['Search', '/search'], ['Campaigns', '/campaigns'], ['Log in', '/login']].map(([label, href]) => (
+            <a key={label} href={href} style={{ fontSize: 14, color: s.muted, textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = s.text)}
+              onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>{label}</a>
+          ))}
           <a href="/signup" style={{
-            fontSize: 12, fontWeight: 700,
-            padding: '8px 20px', borderRadius: 6,
-            background: s.amber, color: '#000',
-            textDecoration: 'none', letterSpacing: '0.03em',
-            transition: 'opacity 0.2s',
+            padding: '9px 22px', borderRadius: 8,
+            background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
+            color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none',
+            boxShadow: '0 2px 12px rgba(14,165,233,0.3)', transition: 'opacity 0.2s',
           }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
             Get started
           </a>
         </div>
       </nav>
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      {/* Hero */}
       <section style={{
         minHeight: '100vh',
+        background: 'linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 65%)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '120px 40px 80px',
-        position: 'relative', textAlign: 'center',
+        padding: '120px 40px 80px', textAlign: 'center', position: 'relative',
       }}>
-        {/* Background grain */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.04\'/%3E%3C/svg%3E")',
-          opacity: 0.6,
-        }} />
+        <div style={{ position: 'absolute', top: '12%', right: '8%', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '14%', left: '6%', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        {/* Amber glow */}
-        <div style={{
-          position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)',
-          width: 600, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(212,168,71,0.07) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 820 }}>
-          {/* Eyebrow */}
+        <div style={{ maxWidth: 800, position: 'relative', zIndex: 1 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 16px', borderRadius: 40,
-            border: `1px solid ${s.amberDim}`,
-            fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: s.amber, marginBottom: 36,
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(12px)',
-            transition: 'all 0.6s ease 0ms',
+            padding: '6px 18px', borderRadius: 40,
+            background: s.accent, border: `1px solid ${s.primaryLight}`,
+            fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: s.primaryDark, marginBottom: 32,
+            opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(12px)',
+            transition: 'all 0.6s ease',
           }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.amber, display: 'inline-block' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.primary, display: 'inline-block' }} />
             Influencer marketing, reimagined
           </div>
 
-          {/* Headline */}
           <h1 style={{
-            fontFamily: s.display,
-            fontSize: 'clamp(48px, 8vw, 88px)',
-            fontWeight: 700,
-            lineHeight: 1.05,
-            letterSpacing: '-0.02em',
-            margin: '0 0 28px',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+            fontFamily: '"Playfair Display", serif',
+            fontSize: 'clamp(44px, 7.5vw, 82px)',
+            fontWeight: 700, lineHeight: 1.06, letterSpacing: '-0.02em',
+            color: s.text, margin: '0 0 24px',
+            opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s ease 100ms',
           }}>
-            Find creators who
-            <br />
-            <span style={{ color: s.amber }}>actually fit.</span>
+            Find creators who<br />
+            <span style={{ background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              actually fit.
+            </span>
           </h1>
 
-          {/* Subhead */}
           <p style={{
-            fontSize: 'clamp(15px, 2vw, 19px)',
-            color: s.muted, lineHeight: 1.7,
-            maxWidth: 560, margin: '0 auto 48px',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s ease 200ms',
+            fontSize: 'clamp(15px, 2vw, 18px)', color: s.muted, lineHeight: 1.75,
+            maxWidth: 540, margin: '0 auto 44px',
+            opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.7s ease 180ms',
           }}>
             VIRA searches scraped Instagram profiles and uses AI to score each creator
             against your specific campaign — so you spend time connecting, not filtering.
           </p>
 
-          {/* CTAs */}
           <div style={{
             display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap',
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.7s ease 300ms',
+            opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.7s ease 260ms',
           }}>
             <a href="/search" style={{
-              padding: '14px 32px', borderRadius: 8,
-              background: s.amber, color: '#000',
-              fontSize: 14, fontWeight: 700, textDecoration: 'none',
-              letterSpacing: '0.02em', transition: 'opacity 0.2s',
+              padding: '14px 32px', borderRadius: 10,
+              background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
+              color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              boxShadow: '0 4px 20px rgba(14,165,233,0.35)', transition: 'transform 0.2s, box-shadow 0.2s',
             }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(14,165,233,0.4)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(14,165,233,0.35)' }}>
               Search influencers free →
             </a>
             <a href="/signup" style={{
-              padding: '14px 32px', borderRadius: 8,
-              background: 'transparent',
-              border: `1px solid ${s.border}`,
-              color: s.muted, fontSize: 14, fontWeight: 600,
-              textDecoration: 'none', transition: 'all 0.2s',
+              padding: '14px 32px', borderRadius: 10, background: '#fff',
+              border: `1.5px solid ${s.border}`, color: s.text,
+              fontSize: 14, fontWeight: 600, textDecoration: 'none',
+              boxShadow: s.shadowCard, transition: 'border-color 0.2s',
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = s.muted; e.currentTarget.style.color = s.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = s.border; e.currentTarget.style.color = s.muted }}>
+              onMouseEnter={e => (e.currentTarget.style.borderColor = s.primary)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
               Post a campaign
             </a>
           </div>
 
-          {/* Social proof */}
-          <p style={{
-            fontSize: 12, color: s.muted, marginTop: 28,
-            opacity: heroVisible ? 1 : 0,
-            transition: 'all 0.7s ease 400ms',
-          }}>
+          <p style={{ fontSize: 12, color: s.faint, marginTop: 24, opacity: heroVisible ? 1 : 0, transition: 'all 0.7s ease 340ms' }}>
             118 Melbourne food & lifestyle creators indexed · No account needed to search
           </p>
         </div>
       </section>
 
-      {/* ── Marquee ─────────────────────────────────────────────────────── */}
-      <div style={{
-        borderTop: `1px solid ${s.border}`,
-        borderBottom: `1px solid ${s.border}`,
-        padding: '14px 0', overflow: 'hidden',
-        background: s.surface,
-      }}>
-        <div style={{
-          display: 'flex', gap: 48, whiteSpace: 'nowrap',
-          animation: 'marquee 28s linear infinite',
-        }}>
+      {/* Marquee */}
+      <div style={{ borderTop: `1px solid ${s.border}`, borderBottom: `1px solid ${s.border}`, padding: '13px 0', overflow: 'hidden', background: s.bgMuted }}>
+        <div style={{ display: 'flex', gap: 48, whiteSpace: 'nowrap', animation: 'marquee 28s linear infinite' }}>
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={i} style={{ fontSize: 12, color: s.muted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              {item}
-              <span style={{ color: s.amberDim, margin: '0 24px' }}>✦</span>
+            <span key={i} style={{ fontSize: 11, color: s.muted, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+              {item}<span style={{ color: s.primaryLight, margin: '0 20px' }}>✦</span>
             </span>
           ))}
         </div>
         <style>{`@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
       </div>
 
-      {/* ── How it works ────────────────────────────────────────────────── */}
-      <section style={{ padding: '120px 40px', maxWidth: 1100, margin: '0 auto' }}>
+      {/* How it works */}
+      <section style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
         <FadeIn>
-          <p style={{ fontSize: 11, color: s.amber, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
-            How it works
-          </p>
-          <h2 style={{ fontFamily: s.display, fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 72px', maxWidth: 500 }}>
+          <p style={{ fontSize: 11, color: s.primary, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12, fontWeight: 600 }}>How it works</p>
+          <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(30px, 4.5vw, 48px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 64px', color: s.text, maxWidth: 440 }}>
             From search to shortlist in minutes.
           </h2>
         </FadeIn>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 2 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
           {[
-            {
-              n: '01', title: 'Search without signing up',
-              body: 'Browse 118 scraped Instagram profiles by keyword, niche, or handle. See follower counts, engagement rates, and bios instantly.',
-              cta: 'Try the search →', href: '/search',
-            },
-            {
-              n: '02', title: 'Describe your campaign',
-              body: 'Enter your campaign brief — product, tone, target audience. VIRA\'s AI scores every creator against your specific goals.',
-              cta: null, href: null,
-            },
-            {
-              n: '03', title: 'Open a profile, get a score',
-              body: 'Click any creator to generate an AI summary and fit score with match reasons. Cached so you\'re never billed twice.',
-              cta: null, href: null,
-            },
-            {
-              n: '04', title: 'Post a campaign, get applicants',
-              body: 'Publish your brief. Influencers apply with one tap. Review ranked applicants — scored and sorted automatically.',
-              cta: 'Create campaign →', href: '/signup',
-            },
+            { n: '01', title: 'Search without signing up', body: 'Browse scraped Instagram profiles by keyword, niche, or handle. See follower counts, engagement rates, and bios instantly.', cta: 'Try the search →', href: '/search' },
+            { n: '02', title: 'Describe your campaign', body: "Enter your campaign brief. VIRA's AI scores every creator against your specific goals and tone.", cta: null, href: null },
+            { n: '03', title: 'Open a profile, get a score', body: 'Click any creator to generate an AI summary and fit score with match reasons. Cached so you\'re never billed twice.', cta: null, href: null },
+            { n: '04', title: 'Post a campaign, get applicants', body: 'Publish your brief. Influencers apply with one tap. Review ranked applicants — scored and sorted automatically.', cta: 'Create campaign →', href: '/signup' },
           ].map((step, i) => (
-            <FadeIn key={step.n} delay={i * 80}>
+            <FadeIn key={step.n} delay={i * 70}>
               <div style={{
-                padding: '40px 36px',
-                background: s.surface,
-                border: `1px solid ${s.border}`,
-                borderRadius: 2,
-                height: '100%', boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
+                padding: '32px 28px', background: '#fff',
+                border: `1.5px solid ${s.border}`, borderRadius: 14,
+                boxShadow: s.shadowCard, height: '100%', boxSizing: 'border-box',
+                transition: 'box-shadow 0.2s, border-color 0.2s',
               }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = s.faint)}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
-                <span style={{ fontFamily: s.display, fontSize: 48, fontWeight: 700, color: s.faint, display: 'block', marginBottom: 20 }}>
-                  {step.n}
-                </span>
-                <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 12px', letterSpacing: '-0.01em' }}>
-                  {step.title}
-                </h3>
-                <p style={{ fontSize: 14, color: s.muted, lineHeight: 1.7, margin: 0 }}>
-                  {step.body}
-                </p>
-                {step.cta && (
-                  <a href={step.href!} style={{
-                    display: 'inline-block', marginTop: 20,
-                    fontSize: 12, color: s.amber, textDecoration: 'none',
-                    letterSpacing: '0.04em',
-                  }}>
-                    {step.cta}
-                  </a>
-                )}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = s.shadow; e.currentTarget.style.borderColor = s.primaryLight }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = s.shadowCard; e.currentTarget.style.borderColor = s.border }}>
+                <span style={{ fontSize: 38, fontWeight: 800, color: s.accent, fontFamily: '"Playfair Display", serif', display: 'block', marginBottom: 14, lineHeight: 1 }}>{step.n}</span>
+                <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 10px', color: s.text }}>{step.title}</h3>
+                <p style={{ fontSize: 14, color: s.muted, lineHeight: 1.7, margin: 0 }}>{step.body}</p>
+                {step.cta && <a href={step.href!} style={{ display: 'inline-block', marginTop: 16, fontSize: 13, color: s.primary, textDecoration: 'none', fontWeight: 600 }}>{step.cta}</a>}
               </div>
             </FadeIn>
           ))}
         </div>
       </section>
 
-      {/* ── For marketers / For influencers ─────────────────────────────── */}
-      <section style={{ padding: '0 40px 120px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          {/* Marketers */}
+      {/* For marketers / influencers */}
+      <section style={{ padding: '0 40px 100px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <FadeIn>
-            <div style={{
-              padding: '56px 48px',
-              background: s.surface,
-              border: `1px solid ${s.border}`,
-              borderRadius: '2px 0 0 2px',
-            }}>
-              <p style={{ fontSize: 11, color: s.amber, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
-                For marketers
-              </p>
-              <h3 style={{ fontFamily: s.display, fontSize: 'clamp(26px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 20px', lineHeight: 1.2 }}>
+            <div style={{ padding: '52px 44px', borderRadius: 16, background: `linear-gradient(145deg, ${s.secondary}, #fff)`, border: `1.5px solid ${s.border}`, boxShadow: s.shadowCard }}>
+              <p style={{ fontSize: 11, color: s.primary, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16, fontWeight: 600 }}>For marketers</p>
+              <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 18px', color: s.text, lineHeight: 1.2 }}>
                 Stop scrolling Instagram manually.
               </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  'Search 118 creators with real engagement data',
-                  'AI scores each creator against your campaign brief',
-                  'Post campaigns and review ranked applicants',
-                  'Move forward with one click — contact externally',
-                ].map((item, i) => (
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Search 118 creators with real engagement data', 'AI scores each creator against your campaign brief', 'Post campaigns and review ranked applicants', 'Move forward with one click — contact externally'].map((item, i) => (
                   <li key={i} style={{ display: 'flex', gap: 10, fontSize: 14, color: s.muted, lineHeight: 1.5 }}>
-                    <span style={{ color: s.amber, flexShrink: 0, marginTop: 1 }}>›</span>
-                    {item}
+                    <span style={{ color: s.primary, flexShrink: 0 }}>›</span>{item}
                   </li>
                 ))}
               </ul>
-              <a href="/search" style={{
-                display: 'inline-block', padding: '12px 24px',
-                background: s.amber, color: '#000',
-                borderRadius: 6, fontSize: 13, fontWeight: 700,
-                textDecoration: 'none', transition: 'opacity 0.2s',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              <a href="/search" style={{ display: 'inline-block', padding: '11px 24px', background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(14,165,233,0.3)' }}>
                 Search free →
               </a>
             </div>
           </FadeIn>
-
-          {/* Influencers */}
           <FadeIn delay={100}>
-            <div style={{
-              padding: '56px 48px',
-              background: '#0d0d0d',
-              border: `1px solid ${s.border}`,
-              borderRadius: '0 2px 2px 0',
-            }}>
-              <p style={{ fontSize: 11, color: s.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
-                For influencers
-              </p>
-              <h3 style={{ fontFamily: s.display, fontSize: 'clamp(26px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 20px', lineHeight: 1.2 }}>
+            <div style={{ padding: '52px 44px', borderRadius: 16, background: '#fff', border: `1.5px solid ${s.border}`, boxShadow: s.shadowCard }}>
+              <p style={{ fontSize: 11, color: s.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16, fontWeight: 600 }}>For influencers</p>
+              <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 18px', color: s.text, lineHeight: 1.2 }}>
                 Find campaigns that suit your style.
               </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  'Browse live brand campaigns in your niche',
-                  'Apply with one tap — no lengthy forms',
-                  'Your Instagram data speaks for you',
-                  'Track application status in real time',
-                ].map((item, i) => (
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {['Browse live brand campaigns in your niche', 'Apply with one tap — no lengthy forms', 'Your Instagram data speaks for you', 'Track application status in real time'].map((item, i) => (
                   <li key={i} style={{ display: 'flex', gap: 10, fontSize: 14, color: s.muted, lineHeight: 1.5 }}>
-                    <span style={{ color: s.muted, flexShrink: 0, marginTop: 1 }}>›</span>
-                    {item}
+                    <span style={{ color: s.faint, flexShrink: 0 }}>›</span>{item}
                   </li>
                 ))}
               </ul>
-              <a href="/campaigns" style={{
-                display: 'inline-block', padding: '12px 24px',
-                background: 'transparent',
-                border: `1px solid ${s.border}`,
-                color: s.muted, borderRadius: 6,
-                fontSize: 13, fontWeight: 600,
-                textDecoration: 'none', transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = s.muted; e.currentTarget.style.color = s.text }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = s.border; e.currentTarget.style.color = s.muted }}>
+              <a href="/campaigns" style={{ display: 'inline-block', padding: '11px 24px', background: '#fff', border: `1.5px solid ${s.border}`, color: s.text, borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'border-color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = s.primary)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
                 Browse campaigns →
               </a>
             </div>
@@ -398,82 +264,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA banner ──────────────────────────────────────────────────── */}
+      {/* CTA banner */}
       <section style={{
-        margin: '0 40px 120px',
-        padding: '80px 60px',
-        background: s.surface,
-        border: `1px solid ${s.border}`,
-        borderRadius: 4,
-        textAlign: 'center',
+        margin: '0 40px 100px', padding: '80px 60px',
+        background: `linear-gradient(135deg, ${s.primary} 0%, ${s.primaryLight} 100%)`,
+        borderRadius: 20, textAlign: 'center',
+        boxShadow: '0 8px 48px rgba(14,165,233,0.28)',
         position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 500, height: 300, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(212,168,71,0.06) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
         <FadeIn>
-          <h2 style={{
-            fontFamily: s.display,
-            fontSize: 'clamp(32px, 5vw, 54px)',
-            fontWeight: 700, letterSpacing: '-0.02em',
-            margin: '0 0 16px', position: 'relative',
-          }}>
+          <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 'clamp(28px, 4.5vw, 48px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 14px' }}>
             Ready to find your next creator?
           </h2>
-          <p style={{ fontSize: 16, color: s.muted, margin: '0 0 36px', position: 'relative' }}>
-            No account needed. Start searching in seconds.
-          </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <a href="/search" style={{
-              padding: '14px 36px', borderRadius: 8,
-              background: s.amber, color: '#000',
-              fontSize: 14, fontWeight: 700, textDecoration: 'none',
-              transition: 'opacity 0.2s',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', margin: '0 0 36px' }}>No account needed. Start searching in seconds.</p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="/search" style={{ padding: '14px 36px', borderRadius: 10, background: '#fff', color: s.primaryDark, fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 16px rgba(0,0,0,0.1)', transition: 'transform 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
               Search influencers →
             </a>
-            <a href="/signup" style={{
-              padding: '14px 36px', borderRadius: 8,
-              background: 'transparent', border: `1px solid ${s.border}`,
-              color: s.muted, fontSize: 14, fontWeight: 600,
-              textDecoration: 'none', transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = s.muted; e.currentTarget.style.color = s.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = s.border; e.currentTarget.style.color = s.muted }}>
+            <a href="/signup" style={{ padding: '14px 36px', borderRadius: 10, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', transition: 'background 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.22)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}>
               Create account
             </a>
           </div>
         </FadeIn>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer style={{
-        borderTop: `1px solid ${s.border}`,
-        padding: '32px 40px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: 16,
-      }}>
-        <span style={{ fontFamily: s.display, fontSize: 18, fontWeight: 700, letterSpacing: '0.05em', color: s.muted }}>
-          VIRA
-        </span>
+      {/* Footer */}
+      <footer style={{ borderTop: `1px solid ${s.border}`, padding: '28px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        <span style={{ fontFamily: '"Playfair Display", serif', fontSize: 18, fontWeight: 700, color: s.primary }}>VIRA</span>
         <div style={{ display: 'flex', gap: 24 }}>
           {[['Search', '/search'], ['Campaigns', '/campaigns'], ['Log in', '/login'], ['Sign up', '/signup']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: 12, color: s.muted, textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = s.text)}
-              onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>
-              {label}
-            </a>
+              onMouseEnter={e => (e.currentTarget.style.color = s.primary)}
+              onMouseLeave={e => (e.currentTarget.style.color = s.muted)}>{label}</a>
           ))}
         </div>
-        <p style={{ fontSize: 11, color: s.muted, margin: 0 }}>
-          © {new Date().getFullYear()} VIRA
-        </p>
+        <p style={{ fontSize: 11, color: s.faint, margin: 0 }}>© {new Date().getFullYear()} VIRA</p>
       </footer>
     </div>
   )
