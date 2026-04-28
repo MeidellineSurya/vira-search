@@ -26,9 +26,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) { router.push('/login'); return }
       setEmail(data.user.email ?? '')
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      if (profile?.role === 'influencer') { router.push('/campaigns'); return }
     })
     fetch('/api/campaigns?mine=true').then(r => r.json()).then(d => { setCampaigns(d.campaigns ?? []); setLoading(false) })
   }, [router])

@@ -14,12 +14,14 @@ export default function LoginPage() {
   const [error, setError]       = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true); setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setError(error.message); setLoading(false); return }
-    router.push('/dashboard'); router.refresh()
-  }
+  e.preventDefault(); setLoading(true); setError(null)
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error || !data.user) { setError(error?.message ?? 'Login failed'); setLoading(false); return }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+  router.push(profile?.role === 'influencer' ? '/campaigns' : '/dashboard')
+  router.refresh()
+}
 
   const input: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box',

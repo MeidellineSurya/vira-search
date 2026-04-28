@@ -55,7 +55,6 @@ export default function CampaignsPage() {
       <div style={{ borderBottom: `1px solid ${s.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: s.surface, position: 'sticky', top: 0, zIndex: 50 }}>
         <a href="/" style={{ textDecoration: 'none' }}><span style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, fontWeight: 700, color: s.primary }}>VIRA</span></a>
         <nav style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 13 }}>
-          <a href="/search" style={{ color: s.muted, textDecoration: 'none' }}>Search</a>
           <a href="/campaigns" style={{ color: s.primary, textDecoration: 'none', fontWeight: 600 }}>Campaigns</a>
           {userId ? (
             <>
