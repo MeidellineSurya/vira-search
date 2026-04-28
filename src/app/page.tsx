@@ -92,7 +92,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* ── PAGE 1: REVISED HERO ── */}
       <section style={{
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 65%)',
@@ -100,75 +100,96 @@ export default function LandingPage() {
         alignItems: 'center', justifyContent: 'center',
         padding: '120px 40px 80px', textAlign: 'center', position: 'relative',
       }}>
+        {/* Decorative blobs */}
         <div style={{ position: 'absolute', top: '12%', right: '8%', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: '14%', left: '6%', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 800, position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 820, position: 'relative', zIndex: 1 }}>
+          {/* Badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '6px 18px', borderRadius: 40,
             background: s.accent, border: `1px solid ${s.primaryLight}`,
             fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: s.primaryDark, marginBottom: 32,
+            color: s.primaryDark, marginBottom: 36,
             opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(12px)',
             transition: 'all 0.6s ease',
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.primary, display: 'inline-block' }} />
-            Influencer marketing, reimagined
+            Melbourne's local influencer community
           </div>
 
+          {/* Heading */}
           <h1 style={{
             fontFamily: '"Playfair Display", serif',
-            fontSize: 'clamp(44px, 7.5vw, 82px)',
-            fontWeight: 700, lineHeight: 1.06, letterSpacing: '-0.02em',
-            color: s.text, margin: '0 0 24px',
+            fontSize: 'clamp(40px, 7vw, 76px)',
+            fontWeight: 700, lineHeight: 1.08, letterSpacing: '-0.02em',
+            color: s.text, margin: '0 0 20px',
             opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s ease 100ms',
           }}>
-            Find creators who<br />
+            Welcome to Melbourne's<br />
             <span style={{ background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              actually fit.
+              local influencer community.
             </span>
           </h1>
 
+          {/* Subheading */}
           <p style={{
-            fontSize: 'clamp(15px, 2vw, 18px)', color: s.muted, lineHeight: 1.75,
-            maxWidth: 540, margin: '0 auto 44px',
+            fontSize: 'clamp(15px, 2vw, 19px)', color: s.muted, lineHeight: 1.75,
+            maxWidth: 520, margin: '0 auto 56px',
             opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s ease 180ms',
           }}>
-            VIRA searches scraped Instagram profiles and uses AI to score each creator
-            against your specific campaign — so you spend time connecting, not filtering.
+            We are connecting influencers to collaborate with our favourite local brands.
           </p>
 
+          {/* Two CTA boxes */}
           <div style={{
-            display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap',
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20,
+            maxWidth: 640, margin: '0 auto',
             opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s ease 260ms',
           }}>
-            <a href="/search" style={{
-              padding: '14px 32px', borderRadius: 10,
-              background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
-              color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
-              boxShadow: '0 4px 20px rgba(14,165,233,0.35)', transition: 'transform 0.2s, box-shadow 0.2s',
+            {/* Box 1 – Influencers */}
+            <a href="/campaigns" style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+              padding: '28px 28px 24px', borderRadius: 14,
+              background: '#fff', border: `1.5px solid ${s.border}`,
+              boxShadow: s.shadowCard, textDecoration: 'none',
+              transition: 'box-shadow 0.2s, border-color 0.2s, transform 0.2s',
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(14,165,233,0.4)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(14,165,233,0.35)' }}>
-              Search influencers free →
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = s.shadow; e.currentTarget.style.borderColor = s.primaryLight; e.currentTarget.style.transform = 'translateY(-3px)' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = s.shadowCard; e.currentTarget.style.borderColor = s.border; e.currentTarget.style.transform = 'translateY(0)' }}>
+              <span style={{ fontSize: 26, marginBottom: 12 }}>🌟</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: s.text, marginBottom: 8, textAlign: 'left' }}>Explore opportunities</span>
+              <span style={{ fontSize: 13, color: s.muted, lineHeight: 1.6, textAlign: 'left', marginBottom: 18 }}>
+                Browse live brand campaigns and apply with one tap.
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: s.primary }}>Browse campaigns →</span>
             </a>
+
+            {/* Box 2 – Marketers */}
             <a href="/signup" style={{
-              padding: '14px 32px', borderRadius: 10, background: '#fff',
-              border: `1.5px solid ${s.border}`, color: s.text,
-              fontSize: 14, fontWeight: 600, textDecoration: 'none',
-              boxShadow: s.shadowCard, transition: 'border-color 0.2s',
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+              padding: '28px 28px 24px', borderRadius: 14,
+              background: `linear-gradient(145deg, ${s.secondary}, #fff)`,
+              border: `1.5px solid ${s.primaryLight}`,
+              boxShadow: '0 4px 20px rgba(14,165,233,0.12)', textDecoration: 'none',
+              transition: 'box-shadow 0.2s, transform 0.2s',
             }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = s.primary)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
-              Post a campaign
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.22)'; e.currentTarget.style.transform = 'translateY(-3px)' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(14,165,233,0.12)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+              <span style={{ fontSize: 26, marginBottom: 12 }}>📣</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: s.text, marginBottom: 8, textAlign: 'left' }}>Post your campaign</span>
+              <span style={{ fontSize: 13, color: s.muted, lineHeight: 1.6, textAlign: 'left', marginBottom: 18 }}>
+                Reach local creators and find the perfect fit for your brand.
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: s.primaryDark }}>Get started →</span>
             </a>
           </div>
 
-          <p style={{ fontSize: 12, color: s.faint, marginTop: 24, opacity: heroVisible ? 1 : 0, transition: 'all 0.7s ease 340ms' }}>
+          <p style={{ fontSize: 12, color: s.faint, marginTop: 28, opacity: heroVisible ? 1 : 0, transition: 'all 0.7s ease 340ms' }}>
             118 Melbourne food & lifestyle creators indexed · No account needed to search
           </p>
         </div>
@@ -186,7 +207,7 @@ export default function LandingPage() {
         <style>{`@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
       </div>
 
-      {/* How it works */}
+      {/* ── PAGE 2: How it works (KEEP) ── */}
       <section style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
         <FadeIn>
           <p style={{ fontSize: 11, color: s.primary, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12, fontWeight: 600 }}>How it works</p>
@@ -220,7 +241,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* For marketers / influencers */}
+      {/* ── PAGE 3: For marketers / influencers (KEEP) ── */}
       <section style={{ padding: '0 40px 100px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <FadeIn>
@@ -264,7 +285,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA banner */}
+      {/* ── PAGE 4: CTA banner (KEEP) ── */}
       <section style={{
         margin: '0 40px 100px', padding: '80px 60px',
         background: `linear-gradient(135deg, ${s.primary} 0%, ${s.primaryLight} 100%)`,
