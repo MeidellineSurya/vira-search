@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Nav from '@/components/Nav'
 
 const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', accent: '#DDF4FF', border: '#E2E8F0', text: '#1E293B', muted: '#64748B', faint: '#94A3B8', surface: '#FFFFFF' }
 const NICHE_OPTIONS = ['Food', 'Travel', 'Fashion', 'Lifestyle', 'Fitness', 'Beauty', 'Tech', 'Gaming', 'Parenting', 'Finance']
@@ -50,21 +51,11 @@ export default function ProfilePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '"DM Sans", sans-serif', color: s.text }}>
-      <div style={{ borderBottom: `1px solid ${s.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: s.surface, position: 'sticky', top: 0, zIndex: 50 }}>
-        <a href="/" style={{ textDecoration: 'none' }}><span style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, fontWeight: 700, color: s.primary }}>VIRA</span></a>
-        <nav style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 13 }}>
-          <a href="/campaigns" style={{ color: s.muted, textDecoration: 'none' }}>Campaigns</a>
-          <a href="/applications" style={{ color: s.muted, textDecoration: 'none' }}>My applications</a>
-          <a href="/profile" style={{ color: s.primary, textDecoration: 'none', fontWeight: 600 }}>Profile</a>
-          <button onClick={async () => { await createClient().auth.signOut(); window.location.href = '/login' }} style={{ background: 'transparent', border: `1.5px solid ${s.border}`, borderRadius: 7, padding: '5px 14px', fontSize: 12, color: s.muted, cursor: 'pointer' }}>Log out</button>
-        </nav>
-      </div>
-
+      <Nav active="profile" />
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px' }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 6px' }}>Your profile</h1>
         <p style={{ fontSize: 14, color: s.muted, margin: '0 0 28px' }}>This is what marketers see when you apply to a campaign.</p>
 
-        {/* Scraped data match */}
         {scraped && (
           <div style={{ background: '#DCFCE7', border: '1.5px solid #BBF7D0', borderRadius: 12, padding: '16px 20px', marginBottom: 24 }}>
             <p style={{ fontSize: 11, color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px', fontWeight: 700 }}>✦ Matched to scraped Instagram data</p>
@@ -105,7 +96,7 @@ export default function ProfilePage() {
             <label style={label}>Your niches</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {NICHE_OPTIONS.map(tag => (
-                <button key={tag} type="button" onClick={() => toggleNiche(tag)} style={{ padding: '5px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `1.5px solid ${nicheTags.includes(tag) ? s.primary : s.border}`, background: nicheTags.includes(tag) ? s.accent : 'transparent', color: nicheTags.includes(tag) ? s.primary : s.muted, fontWeight: nicheTags.includes(tag) ? 600 : 400, transition: 'all 0.15s' }}>
+                <button key={tag} type="button" onClick={() => toggleNiche(tag)} style={{ padding: '5px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: `1.5px solid ${nicheTags.includes(tag) ? s.primary : s.border}`, background: nicheTags.includes(tag) ? s.accent : 'transparent', color: nicheTags.includes(tag) ? s.primary : s.muted, fontWeight: nicheTags.includes(tag) ? 600 : 400, transition: 'all 0.15s', fontFamily: 'inherit' }}>
                   {tag}
                 </button>
               ))}
@@ -121,7 +112,7 @@ export default function ProfilePage() {
           {error && <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button type="submit" disabled={saving} style={{ flex: 1, padding: '12px', border: 'none', borderRadius: 8, background: saved ? '#DCFCE7' : saving ? '#F1F5F9' : `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, color: saved ? '#15803D' : saving ? s.faint : '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saved || saving ? 'none' : '0 2px 12px rgba(14,165,233,0.3)', transition: 'all 0.2s' }}>
+            <button type="submit" disabled={saving} style={{ flex: 1, padding: '12px', border: 'none', borderRadius: 8, background: saved ? '#DCFCE7' : saving ? '#F1F5F9' : `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, color: saved ? '#15803D' : saving ? s.faint : '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saved || saving ? 'none' : '0 2px 12px rgba(14,165,233,0.3)', transition: 'all 0.2s', fontFamily: 'inherit' }}>
               {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save profile'}
             </button>
             <a href="/campaigns" style={{ padding: '12px 20px', borderRadius: 8, border: `1.5px solid ${s.border}`, color: s.muted, fontSize: 14, textDecoration: 'none' }}>Browse campaigns</a>

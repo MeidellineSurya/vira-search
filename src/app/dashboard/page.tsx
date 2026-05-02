@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Nav from '@/components/Nav'
 
 const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', primaryDark: '#0284C7', accent: '#DDF4FF', bg: '#F8FAFC', border: '#E2E8F0', text: '#1E293B', muted: '#64748B', faint: '#94A3B8', surface: '#FFFFFF', shadow: '0 2px 12px rgba(30,41,59,0.08)' }
 
@@ -35,8 +36,6 @@ export default function DashboardPage() {
     fetch('/api/campaigns?mine=true').then(r => r.json()).then(d => { setCampaigns(d.campaigns ?? []); setLoading(false) })
   }, [router])
 
-  const handleLogout = async () => { await createClient().auth.signOut(); router.push('/login') }
-
   const updateStatus = async (id: string, status: string) => {
     await fetch(`/api/campaigns/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) })
     setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: status as Campaign['status'] } : c))
@@ -46,17 +45,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: s.bg, fontFamily: '"DM Sans", sans-serif', color: s.text }}>
-      {/* Nav */}
-      <div style={{ borderBottom: `1px solid ${s.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: s.surface, position: 'sticky', top: 0, zIndex: 50 }}>
-        <a href="/" style={{ textDecoration: 'none' }}><span style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, fontWeight: 700, color: s.primary }}>VIRA</span></a>
-        <nav style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 13 }}>
-          <a href="/search" style={{ color: s.muted, textDecoration: 'none' }}>Search</a>
-          <a href="/campaigns" style={{ color: s.muted, textDecoration: 'none' }}>Campaigns</a>
-          <a href="/dashboard" style={{ color: s.primary, textDecoration: 'none', fontWeight: 600 }}>Dashboard</a>
-          <button onClick={handleLogout} style={{ background: 'transparent', border: `1.5px solid ${s.border}`, borderRadius: 7, padding: '5px 14px', fontSize: 12, color: s.muted, cursor: 'pointer' }}>Log out</button>
-        </nav>
-      </div>
-
+      <Nav active="dashboard" />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
           <div>
@@ -68,7 +57,6 @@ export default function DashboardPage() {
           </a>
         </div>
 
-        {/* Stats */}
         {campaigns.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
             {[{ label: 'Active', value: counts.active, color: '#15803D', bg: '#DCFCE7' }, { label: 'Draft', value: counts.draft, color: '#854D0E', bg: '#FEF9C3' }, { label: 'Closed', value: counts.closed, color: s.muted, bg: '#F1F5F9' }].map(st => (
@@ -80,7 +68,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Campaign list */}
         {loading ? (
           <p style={{ color: s.faint, fontSize: 14 }}>Loading…</p>
         ) : campaigns.length === 0 ? (
@@ -100,11 +87,7 @@ export default function DashboardPage() {
                       <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: s.text }}>{campaign.title}</h2>
                       <StatusBadge status={campaign.status} />
                     </div>
-                    {campaign.description && (
-                      <p style={{ fontSize: 13, color: s.muted, margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {campaign.description}
-                      </p>
-                    )}
+                    {campaign.description && <p style={{ fontSize: 13, color: s.muted, margin: '0 0 10px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{campaign.description}</p>}
                     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, color: s.muted }}>
                       {campaign.budget_range && <span>💰 {campaign.budget_range}</span>}
                       {campaign.timeline && <span>📅 {campaign.timeline}</span>}
@@ -112,15 +95,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <a href={`/dashboard/campaigns/${campaign.id}`} style={{ padding: '7px 14px', borderRadius: 8, background: s.accent, border: `1px solid ${s.primaryLight}`, color: s.primaryDark, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
-                      View applicants
-                    </a>
-                    {campaign.status === 'draft' && (
-                      <button onClick={() => updateStatus(campaign.id, 'active')} style={{ padding: '7px 14px', borderRadius: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Publish</button>
-                    )}
-                    {campaign.status === 'active' && (
-                      <button onClick={() => updateStatus(campaign.id, 'closed')} style={{ padding: '7px 14px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>
-                    )}
+                    <a href={`/dashboard/campaigns/${campaign.id}`} style={{ padding: '7px 14px', borderRadius: 8, background: s.accent, border: `1px solid ${s.primaryLight}`, color: s.primaryDark, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>View applicants</a>
+                    {campaign.status === 'draft' && <button onClick={() => updateStatus(campaign.id, 'active')} style={{ padding: '7px 14px', borderRadius: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Publish</button>}
+                    {campaign.status === 'active' && <button onClick={() => updateStatus(campaign.id, 'closed')} style={{ padding: '7px 14px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>}
                   </div>
                 </div>
               </div>

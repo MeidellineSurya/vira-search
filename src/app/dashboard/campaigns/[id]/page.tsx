@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Nav from '@/components/Nav'
 
 const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', primaryDark: '#0284C7', accent: '#DDF4FF', bg: '#F8FAFC', border: '#E2E8F0', text: '#1E293B', muted: '#64748B', faint: '#94A3B8', surface: '#FFFFFF', shadow: '0 2px 12px rgba(30,41,59,0.08)' }
 
@@ -11,8 +12,8 @@ type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'pass
 type Campaign = { id: string; title: string; description: string; status: string; budget_range: string | null; timeline: string | null }
 
 function fmt(n: number | null) { if (n == null) return '—'; if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'; if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'; return n.toString() }
-function scoreColor(s: number) { return s >= 75 ? '#15803D' : s >= 50 ? '#854D0E' : '#DC2626' }
-function scoreBg(s: number) { return s >= 75 ? '#DCFCE7' : s >= 50 ? '#FEF9C3' : '#FEF2F2' }
+function scoreColor(score: number) { return score >= 75 ? '#15803D' : score >= 50 ? '#854D0E' : '#DC2626' }
+function scoreBg(score: number)    { return score >= 75 ? '#DCFCE7' : score >= 50 ? '#FEF9C3' : '#FEF2F2' }
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; border: string }> = {
@@ -30,7 +31,9 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <svg width="56" height="56" viewBox="0 0 56 56">
       <circle cx="28" cy="28" r={r} fill="none" stroke="#E2E8F0" strokeWidth="4" />
-      <circle cx="28" cy="28" r={r} fill="none" stroke={scoreColor(score)} strokeWidth="4" strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" transform="rotate(-90 28 28)" style={{ transition: 'stroke-dasharray 0.6s ease' }} />
+      <circle cx="28" cy="28" r={r} fill="none" stroke={scoreColor(score)} strokeWidth="4"
+        strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" transform="rotate(-90 28 28)"
+        style={{ transition: 'stroke-dasharray 0.6s ease' }} />
       <text x="28" y="33" textAnchor="middle" fontSize="13" fontWeight="700" fill={scoreColor(score)}>{score}</text>
     </svg>
   )
@@ -45,8 +48,13 @@ export default function CampaignDetailPage() {
   const [filter, setFilter]         = useState('all')
 
   useEffect(() => {
-    Promise.all([fetch(`/api/campaigns/${id}`).then(r => r.json()), fetch(`/api/campaigns/${id}/applicants`).then(r => r.json())])
-      .then(([cData, aData]) => { if (cData.error) { router.push('/dashboard'); return }; setCampaign(cData.campaign); setApplicants(aData.applicants ?? []); setLoading(false) })
+    Promise.all([
+      fetch(`/api/campaigns/${id}`).then(r => r.json()),
+      fetch(`/api/campaigns/${id}/applicants`).then(r => r.json()),
+    ]).then(([cData, aData]) => {
+      if (cData.error) { router.push('/dashboard'); return }
+      setCampaign(cData.campaign); setApplicants(aData.applicants ?? []); setLoading(false)
+    })
   }, [id, router])
 
   const updateStatus = async (applicantId: string, status: string) => {
@@ -59,18 +67,24 @@ export default function CampaignDetailPage() {
   const inf = selected?.influencer_profiles
   const scr = inf?.influencers
 
-  if (loading) return <div style={{ minHeight: '100vh', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: s.faint, fontFamily: '"DM Sans", sans-serif' }}>Loading…</p></div>
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: s.bg, fontFamily: '"DM Sans", sans-serif' }}>
+      <Nav active="dashboard" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <p style={{ color: s.faint }}>Loading…</p>
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ minHeight: '100vh', background: s.bg, fontFamily: '"DM Sans", sans-serif', color: s.text, display: 'flex', flexDirection: 'column' }}>
-      {/* Nav */}
-      <div style={{ borderBottom: `1px solid ${s.border}`, padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: s.surface, flexShrink: 0, position: 'sticky', top: 0, zIndex: 50 }}>
-        <a href="/" style={{ textDecoration: 'none' }}><span style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, fontWeight: 700, color: s.primary }}>VIRA</span></a>
-        <a href="/dashboard" style={{ fontSize: 13, color: s.muted, textDecoration: 'none' }}>← Dashboard</a>
-      </div>
+      <Nav active="dashboard" />
 
       {/* Campaign header */}
-      <div style={{ padding: '20px 24px', borderBottom: `1px solid ${s.border}`, background: s.surface }}>
+      <div style={{ padding: '16px 24px', borderBottom: `1px solid ${s.border}`, background: s.surface }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+          <a href="/dashboard" style={{ fontSize: 12, color: s.muted, textDecoration: 'none' }}>← Dashboard</a>
+        </div>
         <h1 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px' }}>{campaign?.title}</h1>
         <div style={{ display: 'flex', gap: 16, fontSize: 12, color: s.muted, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontWeight: 600, color: campaign?.status === 'active' ? '#15803D' : s.muted, textTransform: 'capitalize' }}>{campaign?.status}</span>
@@ -82,11 +96,12 @@ export default function CampaignDetailPage() {
 
       {/* Split panel */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+
         {/* Sidebar */}
         <div style={{ width: 300, flexShrink: 0, borderRight: `1px solid ${s.border}`, overflowY: 'auto', background: s.surface, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 4, padding: '10px 12px', borderBottom: `1px solid ${s.border}` }}>
             {['all', 'pending', 'selected', 'passed'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', textTransform: 'capitalize', background: filter === f ? s.primary : 'transparent', color: filter === f ? '#fff' : s.muted, transition: 'all 0.15s' }}>
+              <button key={f} onClick={() => setFilter(f)} style={{ padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', textTransform: 'capitalize', background: filter === f ? s.primary : 'transparent', color: filter === f ? '#fff' : s.muted, transition: 'all 0.15s', fontFamily: 'inherit' }}>
                 {f}
               </button>
             ))}
@@ -108,9 +123,7 @@ export default function CampaignDetailPage() {
                     <p style={{ fontSize: 11, color: s.faint, margin: 0 }}>{fmt(followers ?? null)} followers</p>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                    {applicant.ai_fit_score !== null && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(applicant.ai_fit_score) }}>{applicant.ai_fit_score}</span>
-                    )}
+                    {applicant.ai_fit_score !== null && <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(applicant.ai_fit_score) }}>{applicant.ai_fit_score}</span>}
                     <StatusBadge status={applicant.status} />
                   </div>
                 </div>
@@ -137,10 +150,10 @@ export default function CampaignDetailPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {selected.status !== 'selected' && (
-                    <button onClick={() => updateStatus(selected.id, 'selected')} style={{ padding: '8px 16px', borderRadius: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>✓ Move forward</button>
+                    <button onClick={() => updateStatus(selected.id, 'selected')} style={{ padding: '8px 16px', borderRadius: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>✓ Move forward</button>
                   )}
                   {selected.status !== 'passed' && (
-                    <button onClick={() => updateStatus(selected.id, 'passed')} style={{ padding: '8px 16px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Pass</button>
+                    <button onClick={() => updateStatus(selected.id, 'passed')} style={{ padding: '8px 16px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Pass</button>
                   )}
                 </div>
               </div>
@@ -167,15 +180,12 @@ export default function CampaignDetailPage() {
                   </div>
                   {selected.match_reasons && selected.match_reasons.length > 0 && (
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {selected.match_reasons.map((r, i) => (
-                        <li key={i} style={{ fontSize: 12, color: s.muted, display: 'flex', gap: 6 }}><span style={{ color: s.primary }}>›</span>{r}</li>
-                      ))}
+                      {selected.match_reasons.map((r, i) => <li key={i} style={{ fontSize: 12, color: s.muted, display: 'flex', gap: 6 }}><span style={{ color: s.primary }}>›</span>{r}</li>)}
                     </ul>
                   )}
                 </div>
               )}
 
-              {/* Bios */}
               {scr?.bio && <div style={{ marginBottom: 14 }}><p style={{ fontSize: 11, color: s.faint, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Instagram bio</p><p style={{ fontSize: 14, color: s.text, lineHeight: 1.65, margin: 0 }}>{scr.bio}</p></div>}
               {inf?.short_bio && <div style={{ marginBottom: 14 }}><p style={{ fontSize: 11, color: s.faint, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Self-written bio</p><p style={{ fontSize: 14, color: s.text, lineHeight: 1.65, margin: 0 }}>{inf.short_bio}</p></div>}
               {scr?.ai_summary && <div style={{ marginBottom: 14 }}><p style={{ fontSize: 11, color: s.faint, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>AI summary</p><p style={{ fontSize: 14, color: s.text, lineHeight: 1.65, margin: 0 }}>{scr.ai_summary}</p></div>}
