@@ -8,7 +8,7 @@ const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', primaryDark: '#0284C7',
 
 type Influencer = { id: string; profile_name: string; bio: string | null; followers_count: number | null; engagement_rate: number | null; average_likes: number | null; average_comments: number | null; instagram_url: string | null; ai_summary: string | null }
 type InfluencerProfile = { id: string; ig_handle: string | null; niche_tags: string[] | null; short_bio: string | null; influencers: Influencer | null }
-type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'passed'; applied_at: string; ai_fit_score: number | null; ai_fit_summary: string | null; match_reasons: string[] | null; influencer_profiles: InfluencerProfile | null }
+type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'passed'; applied_at: string; ai_fit_score: number | null; ai_fit_summary: string | null; match_reasons: string[] | null; contact_email: string | null; influencer_profiles: InfluencerProfile | null }
 type Campaign = { id: string; title: string; description: string; status: string; budget_range: string | null; timeline: string | null }
 
 function fmt(n: number | null) { if (n == null) return '—'; if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'; if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'; return n.toString() }
@@ -200,6 +200,17 @@ export default function CampaignDetailPage() {
               )}
 
               {scr?.instagram_url && <a href={scr.instagram_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: s.primary, textDecoration: 'none', fontWeight: 600 }}>View Instagram profile ↗</a>}
+
+              {/* Contact email */}
+              {selected.contact_email && (
+                <div style={{ marginTop: 16, padding: '14px 16px', background: s.accent, border: `1.5px solid ${s.primaryLight}`, borderRadius: 10 }}>
+                  <p style={{ fontSize: 11, color: s.primaryDark, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px', fontWeight: 700 }}>Contact email</p>
+                  <a href={`mailto:${selected.contact_email}`} style={{ fontSize: 14, color: s.primary, textDecoration: 'none', fontWeight: 600 }}>
+                    {selected.contact_email}
+                  </a>
+                  <p style={{ fontSize: 11, color: s.muted, margin: '4px 0 0' }}>Click to open in your email client</p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -96,6 +96,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     <a href={`/dashboard/campaigns/${campaign.id}`} style={{ padding: '7px 14px', borderRadius: 8, background: s.accent, border: `1px solid ${s.primaryLight}`, color: s.primaryDark, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>View applicants</a>
+                    <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/campaigns/${campaign.id}`) }} style={{ padding: '7px 14px', borderRadius: 8, background: '#F8FAFC', border: `1px solid ${s.border}`, color: s.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>🔗 Share</button>
                     {campaign.status === 'draft' && <button onClick={() => updateStatus(campaign.id, 'active')} style={{ padding: '7px 14px', borderRadius: 8, background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Publish</button>}
                     {campaign.status === 'active' && <button onClick={() => updateStatus(campaign.id, 'closed')} style={{ padding: '7px 14px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Close</button>}
                   </div>

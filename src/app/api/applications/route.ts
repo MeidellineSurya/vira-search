@@ -15,7 +15,7 @@ export async function GET() {
   const { data, error } = await service
     .from('applications')
     .select(`
-      id, status, applied_at, ai_fit_score,
+      id, status, applied_at, ai_fit_score, contact_email,
       campaigns (
         id, title, description, budget_range, timeline,
         niche_tags, status
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { campaign_id } = await req.json()
+  const { campaign_id, contact_email } = await req.json()
   if (!campaign_id) return NextResponse.json({ error: 'campaign_id required' }, { status: 400 })
 
   const service = createServiceClient()
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
   const { data: application, error } = await service
     .from('applications')
-    .insert({ campaign_id, influencer_id: user.id, status: 'pending' })
+    .insert({ campaign_id, influencer_id: user.id, status: 'pending', contact_email: contact_email?.trim() || null })
     .select()
     .single()
 

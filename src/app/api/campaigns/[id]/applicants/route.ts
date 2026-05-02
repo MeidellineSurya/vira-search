@@ -31,7 +31,7 @@ export async function GET(
   const { data, error } = await service
     .from('applications')
     .select(`
-      id, status, applied_at, ai_fit_score, ai_fit_summary, match_reasons,
+      id, status, applied_at, ai_fit_score, ai_fit_summary, match_reasons, contact_email,
       influencer_profiles (
         id, ig_handle, niche_tags, short_bio, audience_location,
         influencers (

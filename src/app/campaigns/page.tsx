@@ -75,7 +75,13 @@ export default function CampaignsPage() {
                   onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h2 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px', color: s.text }}>{campaign.title}</h2>
+                      <a href={`/campaigns/${campaign.id}`} style={{ textDecoration: 'none' }}>
+                        <h2 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px', color: s.text, transition: 'color 0.15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = s.primary)}
+                          onMouseLeave={e => (e.currentTarget.style.color = s.text)}>
+                          {campaign.title}
+                        </h2>
+                      </a>
                       <p style={{ fontSize: 13, color: s.muted, margin: '0 0 14px', lineHeight: 1.65, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{campaign.description}</p>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                         {campaign.niche_tags?.map(tag => <span key={tag} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: s.accent, color: s.primaryDark, fontWeight: 600 }}>{tag}</span>)}

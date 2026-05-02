@@ -87,7 +87,7 @@ export default function NewCampaignPage() {
                 onFocus={e => (e.target.style.borderColor = s.primary)} onBlur={e => (e.target.style.borderColor = s.border)} />
             </div>
             <div>
-              <label style={label}>Timeline</label>
+              <label style={label}>Time</label>
               <input value={timeline} onChange={e => setTimeline(e.target.value)} placeholder="e.g. 3 weeks" style={input}
                 onFocus={e => (e.target.style.borderColor = s.primary)} onBlur={e => (e.target.style.borderColor = s.border)} />
             </div>
