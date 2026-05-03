@@ -14,24 +14,25 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('campaigns')
-    .select('id, title, description, niche_tags, content_type_tags, budget_range, timeline, status, created_at, ideal_follower_min, ideal_follower_max')
+    .select('id, title, description, notes, niche_tags, content_type_tags, budget_range, timeline, status, created_at, ideal_follower_min, ideal_follower_max')
     .order('created_at', { ascending: false })
+    .eq(mine && user ? 'marketer_id' : 'status', mine && user ? user.id : 'active')
 
-  if (mine && user) {
-    query = query.eq('marketer_id', user.id)
-  } else {
-    query = query.eq('status', 'active')
-  }
-
-  const { data, error } = await query
   if (error) {
     logError('campaigns_get_failed', error)
     return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 })
   }
 
-  return NextResponse.json({ campaigns: data ?? [] })
+  // Strip internal notes from public responses
+  const campaigns = (data ?? []).map(c => {
+    if (mine && user) return c
+    const { notes: _, ...pub } = c
+    return pub
+  })
+
+  return NextResponse.json({ campaigns })
 }
 
 export async function POST(req: NextRequest) {
@@ -46,7 +47,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Validate
   const validation = validateCampaignInput(body)
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: validation.status })
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
   // Sanitise all fields
   const title             = sanitizeText(body.title as string, 200)!
   const description       = sanitizeText(body.description as string, 5000)
+  const notes             = sanitizeText(body.notes as string, 2000)       // internal only
   const budget_range      = sanitizeText(body.budget_range as string, 100)
   const timeline          = sanitizeText(body.timeline as string, 100)
   const niche_tags        = sanitizeStringArray(body.niche_tags, 10, 50)
@@ -69,9 +70,11 @@ export async function POST(req: NextRequest) {
     .from('campaigns')
     .insert({
       marketer_id: user.id,
-      title, description, budget_range, timeline,
+      title, description, notes,
+      budget_range, timeline,
       niche_tags, content_type_tags,
-      ideal_follower_min, ideal_follower_max, status,
+      ideal_follower_min, ideal_follower_max,
+      status,
     })
     .select()
     .single()

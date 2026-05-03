@@ -15,7 +15,7 @@ export async function GET(
   const { data, error } = await supabase
     .from('campaigns')
     .select(`
-      id, title, description, niche_tags, content_type_tags,
+      id, title, description, notes, niche_tags, content_type_tags,
       budget_range, timeline, status, created_at,
       ideal_follower_min, ideal_follower_max, marketer_id
     `)

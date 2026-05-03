@@ -9,7 +9,7 @@ const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', primaryDark: '#0284C7',
 type Influencer = { id: string; profile_name: string; bio: string | null; followers_count: number | null; engagement_rate: number | null; average_likes: number | null; average_comments: number | null; instagram_url: string | null; ai_summary: string | null }
 type InfluencerProfile = { id: string; ig_handle: string | null; niche_tags: string[] | null; short_bio: string | null; influencers: Influencer | null }
 type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'passed'; applied_at: string; ai_fit_score: number | null; ai_fit_summary: string | null; match_reasons: string[] | null; contact_email: string | null; influencer_profiles: InfluencerProfile | null }
-type Campaign = { id: string; title: string; description: string; status: string; budget_range: string | null; timeline: string | null }
+type Campaign = { id: string; title: string; description: string; notes: string | null; status: string; budget_range: string | null; timeline: string | null }
 
 function fmt(n: number | null) { if (n == null) return '—'; if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'; if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'; return n.toString() }
 function scoreColor(score: number) { return score >= 75 ? '#15803D' : score >= 50 ? '#854D0E' : '#DC2626' }
@@ -92,6 +92,11 @@ export default function CampaignDetailPage() {
           {campaign?.budget_range && <span>💰 {campaign.budget_range}</span>}
           {campaign?.timeline && <span>📅 {campaign.timeline}</span>}
         </div>
+        {campaign?.notes && (
+          <div style={{ marginTop: 10, padding: '10px 14px', background: '#FEF9C3', border: '1px solid #FEF08A', borderRadius: 8, fontSize: 12, color: '#854D0E' }}>
+            🔒 <strong>Internal notes:</strong> {campaign.notes}
+          </div>
+        )}
       </div>
 
       {/* Split panel */}
