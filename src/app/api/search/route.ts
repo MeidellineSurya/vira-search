@@ -1,16 +1,22 @@
 // src/app/api/search/route.ts
-// GET /api/search?q=keyword&limit=20&offset=0
-// Returns influencers matching keyword via Postgres full-text search.
-// No AI calls here — fast, cheap, always runs.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, rateLimitResponse, sanitizeText, getClientIp, log } from '@/lib/security'
 
 export async function GET(req: NextRequest) {
+  // Rate limit by IP (search is public)
+  const ip = getClientIp(req)
+  const { allowed, resetAt } = await checkRateLimit(req, '/api/search', ip)
+  if (!allowed) return rateLimitResponse(resetAt)
+
   const { searchParams } = new URL(req.url)
-  const q      = searchParams.get('q')?.trim() ?? ''
-  const limit  = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)
-  const offset = parseInt(searchParams.get('offset') ?? '0')
+
+  // Sanitise query params
+  const rawQ   = searchParams.get('q') ?? ''
+  const q      = sanitizeText(rawQ, 200) ?? ''
+  const limit  = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '20'), 1), 50)
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0)
 
   const supabase = await createClient()
 
@@ -21,20 +27,18 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1)
 
   if (q) {
-    // Postgres full-text search across profile_name, bio, industry
-    query = query.textSearch(
-      'fts',
-      q.split(' ').map(w => w + ':*').join(' & '),
-      { config: 'english', type: 'plain' }
+    // Use ilike for partial match (FTS index handles performance)
+    query = query.or(
+      `profile_name.ilike.%${q}%,bio.ilike.%${q}%,industry.ilike.%${q}%`
     )
   }
 
-  const { data, error, count } = await query
+  const { data, error } = await query
 
   if (error) {
-    console.error('[search] Supabase error:', error)
+    log('warn', 'search_error', { error: error.message })
     return NextResponse.json({ error: 'Search failed' }, { status: 500 })
   }
 
-  return NextResponse.json({ results: data ?? [], total: count ?? 0 })
+  return NextResponse.json({ results: data ?? [] })
 }

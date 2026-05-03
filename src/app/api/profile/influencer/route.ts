@@ -1,9 +1,12 @@
 // src/app/api/profile/influencer/route.ts
-// GET  — get current influencer's profile + linked scraped data
-// POST — create/update influencer profile + queue scrape if no match found
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import {
+  validateInfluencerProfileInput,
+  sanitizeHandle, sanitizeText, sanitizeStringArray,
+  log, logError,
+} from '@/lib/security'
 
 export async function GET() {
   const supabase = await createClient()
@@ -32,118 +35,64 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { ig_handle, niche_tags, short_bio, audience_location } = await req.json()
+  let body: Record<string, unknown>
+  try { body = await req.json() }
+  catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
-  if (!ig_handle?.trim()) {
-    return NextResponse.json({ error: 'Instagram handle is required' }, { status: 400 })
-  }
+  const validation = validateInfluencerProfileInput(body)
+  if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: validation.status })
+
+  const handle            = sanitizeHandle(body.ig_handle)
+  const short_bio         = sanitizeText(body.short_bio as string, 500)
+  const audience_location = sanitizeText(body.audience_location as string, 100)
+  const niche_tags        = sanitizeStringArray(body.niche_tags, 10, 50)
+
+  if (!handle) return NextResponse.json({ error: 'Invalid Instagram handle' }, { status: 400 })
 
   const service = createServiceClient()
-  const handle  = ig_handle.trim().replace(/^@/, '').toLowerCase()
 
-  // Try to find matching scraped influencer record
   const { data: scraped } = await service
-    .from('influencers')
-    .select('id')
-    .ilike('profile_name', handle)
-    .single()
+    .from('influencers').select('id').ilike('profile_name', handle).single()
 
-  // Upsert influencer profile
   const { data, error } = await service
     .from('influencer_profiles')
     .upsert({
-      id:                user.id,
-      ig_handle:         handle,
-      niche_tags:        niche_tags ?? [],
-      short_bio:         short_bio?.trim() ?? null,
-      audience_location: audience_location?.trim() ?? null,
-      influencer_id:     scraped?.id ?? null,
-      updated_at:        new Date().toISOString(),
+      id: user.id, ig_handle: handle, niche_tags, short_bio,
+      audience_location, influencer_id: scraped?.id ?? null,
+      updated_at: new Date().toISOString(),
     }, { onConflict: 'id' })
-    .select()
-    .single()
+    .select().single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  // If no scraped match — queue a scrape request and notify admin
-  if (!scraped) {
-    queueScrapeRequest(service, handle, user.id)
+  if (error) {
+    logError('influencer_profile_upsert_failed', error, { user_id: user.id })
+    return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 })
   }
+
+  log('info', 'influencer_profile_saved', { matched_scraped: !!scraped?.id })
+  if (!scraped) queueScrapeRequest(service, handle, user.id)
 
   return NextResponse.json({ profile: data })
 }
 
-// ── Scrape request queue ──────────────────────────────────────────────────────
-
-async function queueScrapeRequest(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  service: any,
-  handle: string,
-  userId: string
-) {
+async function queueScrapeRequest(service: any, handle: string, userId: string) {
   try {
-    // Upsert — don't create duplicates if they update their profile
-    const { error } = await service
-      .from('scrape_requests')
-      .upsert(
-        { ig_handle: handle, requested_by: userId, status: 'pending', updated_at: new Date().toISOString() },
-        { onConflict: 'ig_handle', ignoreDuplicates: true }
-      )
-
-    if (error) {
-      console.error('[queueScrapeRequest] DB error:', error.message)
-      return
-    }
-
-    // Send email notification to admin
-    await notifyAdmin(handle, userId)
-
-  } catch (err) {
-    console.error('[queueScrapeRequest] error:', err)
-  }
-}
-
-async function notifyAdmin(handle: string, userId: string) {
-  const adminEmail = process.env.ADMIN_EMAIL
-  const resendKey  = process.env.RESEND_API_KEY
-
-  if (!adminEmail || !resendKey) {
-    // No email config — just log to console (visible in Vercel logs)
-    console.log(`[SCRAPE REQUEST] New unscraped influencer signed up: @${handle} (user: ${userId})`)
-    return
-  }
-
-  try {
+    await service.from('scrape_requests').upsert(
+      { ig_handle: handle, requested_by: userId, status: 'pending', updated_at: new Date().toISOString() },
+      { onConflict: 'ig_handle', ignoreDuplicates: true }
+    )
+    const adminEmail = process.env.ADMIN_EMAIL
+    const resendKey  = process.env.RESEND_API_KEY
+    const domain     = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'virasearch.vercel.app'
+    if (!adminEmail || !resendKey) { console.log('[SCRAPE REQUEST] @' + handle); return }
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendKey}`,
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + resendKey },
       body: JSON.stringify({
-        from:    'VIRA <noreply@yourdomain.com>',   // ← update with your domain
-        to:      adminEmail,
-        subject: `[VIRA] New scrape request: @${handle}`,
-        html: `
-          <h2>New influencer signup — scrape needed</h2>
-          <p><strong>Instagram handle:</strong> @${handle}</p>
-          <p><strong>User ID:</strong> ${userId}</p>
-          <p>This influencer signed up on VIRA but has no scraped data yet.</p>
-          <h3>To action this:</h3>
-          <ol>
-            <li>Scrape <a href="https://instagram.com/${handle}">@${handle}</a> via Apify or manually</li>
-            <li>Insert the data into the <code>influencers</code> table with <code>profile_name = '${handle}'</code></li>
-            <li>Call the admin link endpoint to connect their profile:<br/>
-              <code>POST /api/admin/link-scraped</code><br/>
-              <code>{ "ig_handle": "${handle}" }</code>
-            </li>
-          </ol>
-          <p>Or view all pending requests in Supabase:<br/>
-          <code>select * from scrape_requests where status = 'pending' order by created_at desc;</code></p>
-        `,
+        from: 'VIRA <noreply@' + domain + '>',
+        to: adminEmail,
+        subject: '[VIRA] Scrape request: @' + handle,
+        html: '<p><strong>@' + handle + '</strong> signed up without scraped data.<br/><a href="https://' + domain + '/admin/scrape-queue?secret=' + process.env.ADMIN_SECRET + '">View admin queue</a></p>',
       }),
     })
-  } catch (err) {
-    console.error('[notifyAdmin] email send failed:', err)
-  }
+  } catch (err) { logError('scrape_request_error', err, { handle }) }
 }
