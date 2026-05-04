@@ -1,9 +1,5 @@
 'use client'
 
-// src/app/campaigns/[id]/page.tsx
-// Public shareable campaign page — no auth required to view.
-// Influencers can apply from here. URL is shareable externally.
-
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -35,35 +31,27 @@ export default function CampaignDetailPage() {
   const params = useParams()
   const id = params.id as string
 
-  const [campaign, setCampaign]   = useState<Campaign | null>(null)
-  const [loading, setLoading]     = useState(true)
-  const [notFound, setNotFound]   = useState(false)
-
-  // Auth state
-  const [userId, setUserId]       = useState<string | null>(null)
-  const [userRole, setUserRole]   = useState<string | null>(null)
-
-  // Apply modal state
-  const [showModal, setShowModal] = useState(false)
-  const [email, setEmail]         = useState('')
-  const [applying, setApplying]   = useState(false)
-  const [applied, setApplied]     = useState(false)
+  const [campaign, setCampaign]     = useState<Campaign | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [notFound, setNotFound]     = useState(false)
+  const [userId, setUserId]         = useState<string | null>(null)
+  const [userRole, setUserRole]     = useState<string | null>(null)
+  const [showModal, setShowModal]   = useState(false)
+  const [email, setEmail]           = useState('')
+  const [applicantNote, setNote]    = useState('')
+  const [applying, setApplying]     = useState(false)
+  const [applied, setApplied]       = useState(false)
   const [applyError, setApplyError] = useState<string | null>(null)
-
-  // Copy link state
-  const [copied, setCopied]       = useState(false)
+  const [copied, setCopied]         = useState(false)
 
   useEffect(() => {
-    // Get auth
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setUserId(data.user.id)
-        // Pre-fill email from auth
         setEmail(data.user.email ?? '')
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
         setUserRole(profile?.role ?? null)
-        // Check if already applied
         if (profile?.role === 'influencer') {
           const res = await fetch('/api/applications')
           const d = await res.json()
@@ -72,27 +60,23 @@ export default function CampaignDetailPage() {
         }
       }
     })
-
-    // Fetch campaign
     fetch(`/api/campaigns/${id}`)
       .then(r => r.json())
       .then(d => {
         if (d.error || !d.campaign) { setNotFound(true); setLoading(false); return }
-        setCampaign(d.campaign)
-        setLoading(false)
+        setCampaign(d.campaign); setLoading(false)
       })
   }, [id])
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
   const handleApplyClick = () => {
     if (!userId) { window.location.href = `/signup?redirect=/campaigns/${id}`; return }
     if (userRole !== 'influencer') return
-    setShowModal(true)
+    setNote(''); setApplyError(null); setShowModal(true)
   }
 
   const handleSubmitApplication = async (e: React.FormEvent) => {
@@ -103,14 +87,17 @@ export default function CampaignDetailPage() {
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campaign_id: id, contact_email: email.trim() }),
+      body: JSON.stringify({
+        campaign_id:    id,
+        contact_email:  email.trim(),
+        applicant_note: applicantNote.trim() || null,
+      }),
     })
     const data = await res.json()
     setApplying(false)
 
     if (res.ok) {
-      setApplied(true)
-      setShowModal(false)
+      setApplied(true); setShowModal(false)
     } else if (res.status === 400 && data.error?.includes('profile')) {
       window.location.href = '/profile'
     } else {
@@ -152,8 +139,6 @@ export default function CampaignDetailPage() {
       <Nav active="campaigns" />
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px' }}>
-
-        {/* Back link */}
         <a href="/campaigns" style={{ fontSize: 13, color: s.muted, textDecoration: 'none', display: 'inline-block', marginBottom: 24 }}>← All campaigns</a>
 
         {/* Header card */}
@@ -162,43 +147,21 @@ export default function CampaignDetailPage() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                 <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>{campaign.title}</h1>
-                {isClosed && (
-                  <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#F1F5F9', color: s.muted, border: `1px solid ${s.border}`, fontWeight: 600 }}>Closed</span>
-                )}
+                {isClosed && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#F1F5F9', color: s.muted, border: `1px solid ${s.border}`, fontWeight: 600 }}>Closed</span>}
               </div>
-
-              {/* Tags */}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
-                {campaign.niche_tags?.map(tag => (
-                  <span key={tag} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: s.accent, color: s.primaryDark, fontWeight: 600 }}>{tag}</span>
-                ))}
-                {campaign.content_type_tags?.map(tag => (
-                  <span key={tag} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#EFF6FF', color: '#1D4ED8', fontWeight: 600 }}>{tag}</span>
-                ))}
+                {campaign.niche_tags?.map(tag => <span key={tag} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: s.accent, color: s.primaryDark, fontWeight: 600 }}>{tag}</span>)}
+                {campaign.content_type_tags?.map(tag => <span key={tag} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#EFF6FF', color: '#1D4ED8', fontWeight: 600 }}>{tag}</span>)}
               </div>
-
-              {/* Meta */}
               <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: s.muted }}>
-                {campaign.budget_range && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span>💰</span> {campaign.budget_range}
-                  </span>
-                )}
-                {campaign.timeline && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span>📅</span> {campaign.timeline}
-                  </span>
-                )}
+                {campaign.budget_range && <span>💰 {campaign.budget_range}</span>}
+                {campaign.timeline && <span>📅 {campaign.timeline}</span>}
                 {(campaign.ideal_follower_min || campaign.ideal_follower_max) && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span>👥</span>
-                    {fmt(campaign.ideal_follower_min)}{campaign.ideal_follower_min && campaign.ideal_follower_max ? '–' : ''}{fmt(campaign.ideal_follower_max)} followers
-                  </span>
+                  <span>👥 {fmt(campaign.ideal_follower_min)}{campaign.ideal_follower_min && campaign.ideal_follower_max ? '–' : ''}{fmt(campaign.ideal_follower_max)} followers</span>
                 )}
               </div>
             </div>
 
-            {/* Action buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
               {!isClosed && (
                 <button onClick={handleApplyClick} disabled={applied} style={{
@@ -207,13 +170,10 @@ export default function CampaignDetailPage() {
                   background: applied ? '#DCFCE7' : `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
                   color: applied ? '#15803D' : '#fff',
                   boxShadow: applied ? 'none' : '0 4px 16px rgba(14,165,233,0.35)',
-                  transition: 'all 0.2s',
                 }}>
                   {applied ? '✓ Applied' : !userId ? 'Sign up to apply' : userRole === 'marketer' ? 'Marketer account' : 'Apply now'}
                 </button>
               )}
-
-              {/* Share button */}
               <button onClick={handleCopyLink} style={{
                 padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
                 border: `1.5px solid ${copied ? s.primary : s.border}`,
@@ -233,21 +193,19 @@ export default function CampaignDetailPage() {
           <p style={{ fontSize: 15, color: s.text, lineHeight: 1.75, margin: 0, whiteSpace: 'pre-wrap' }}>{campaign.description}</p>
         </div>
 
-        {/* Closed notice */}
         {isClosed && (
           <div style={{ marginTop: 16, padding: '14px 20px', background: '#F1F5F9', border: `1px solid ${s.border}`, borderRadius: 10, fontSize: 13, color: s.muted }}>
             This campaign is no longer accepting applications.
           </div>
         )}
 
-        {/* Not logged in CTA */}
         {!userId && !isClosed && (
           <div style={{ marginTop: 16, padding: '20px 24px', background: s.accent, border: `1.5px solid ${s.primaryLight}`, borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <p style={{ fontSize: 14, fontWeight: 600, color: s.primaryDark, margin: '0 0 2px' }}>Want to apply?</p>
               <p style={{ fontSize: 13, color: s.primary, margin: 0 }}>Create a free influencer account to apply in seconds.</p>
             </div>
-            <a href={`/signup?redirect=/campaigns/${id}`} style={{ padding: '10px 22px', borderRadius: 8, background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 10px rgba(14,165,233,0.3)', whiteSpace: 'nowrap' }}>
+            <a href={`/signup?redirect=/campaigns/${id}`} style={{ padding: '10px 22px', borderRadius: 8, background: `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
               Sign up free
             </a>
           </div>
@@ -258,26 +216,32 @@ export default function CampaignDetailPage() {
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,41,59,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }}
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(30,41,59,0.2)' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em' }}>Apply to campaign</h2>
-            <p style={{ fontSize: 14, color: s.muted, margin: '0 0 24px' }}>
-              Enter your contact email so the marketer can reach you if selected.
-            </p>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(30,41,59,0.2)' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em', color: s.text }}>Apply to campaign</h2>
+            <p style={{ fontSize: 14, color: s.muted, margin: '0 0 24px' }}>Add your contact details and any notes for the marketer.</p>
 
             <form onSubmit={handleSubmitApplication} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
+                <label style={{ fontSize: 12, color: s.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Contact email *</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" style={input}
+                  onFocus={e => (e.target.style.borderColor = s.primary)} onBlur={e => (e.target.style.borderColor = s.border)} />
+                <p style={{ fontSize: 11, color: s.faint, margin: '5px 0 0' }}>Only shared with the marketer if they select you.</p>
+              </div>
+
+              <div>
                 <label style={{ fontSize: 12, color: s.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Contact email *
+                  Note to marketer <span style={{ color: s.faint, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
                 </label>
-                <input
-                  type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  required placeholder="you@example.com" style={input}
+                <textarea
+                  value={applicantNote}
+                  onChange={e => setNote(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. I'm available weekdays 10am–4pm. Happy to visit the venue on short notice. I specialise in food photography and short-form video…"
+                  style={{ ...input, resize: 'vertical', lineHeight: 1.6 }}
                   onFocus={e => (e.target.style.borderColor = s.primary)}
                   onBlur={e => (e.target.style.borderColor = s.border)}
                 />
-                <p style={{ fontSize: 11, color: s.faint, margin: '5px 0 0' }}>
-                  Only shared with the marketer if they select you. Not publicly visible.
-                </p>
+                <p style={{ fontSize: 11, color: s.faint, margin: '5px 0 0' }}>Share your availability, content style, or anything relevant.</p>
               </div>
 
               {applyError && <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{applyError}</p>}
@@ -292,10 +256,7 @@ export default function CampaignDetailPage() {
                 }}>
                   {applying ? 'Applying…' : 'Submit application'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} style={{
-                  padding: '12px 20px', borderRadius: 8, border: `1.5px solid ${s.border}`,
-                  background: 'transparent', color: s.muted, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-                }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '12px 20px', borderRadius: 8, border: `1.5px solid ${s.border}`, background: 'transparent', color: s.muted, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Cancel
                 </button>
               </div>

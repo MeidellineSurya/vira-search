@@ -8,7 +8,7 @@ const s = { primary: '#0EA5E9', primaryLight: '#38BDF8', primaryDark: '#0284C7',
 
 type Influencer = { id: string; profile_name: string; bio: string | null; followers_count: number | null; engagement_rate: number | null; average_likes: number | null; average_comments: number | null; instagram_url: string | null; ai_summary: string | null }
 type InfluencerProfile = { id: string; ig_handle: string | null; niche_tags: string[] | null; short_bio: string | null; influencers: Influencer | null }
-type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'passed'; applied_at: string; ai_fit_score: number | null; ai_fit_summary: string | null; match_reasons: string[] | null; contact_email: string | null; influencer_profiles: InfluencerProfile | null }
+type Applicant = { id: string; status: 'pending' | 'viewed' | 'selected' | 'passed'; applied_at: string; ai_fit_score: number | null; ai_fit_summary: string | null; match_reasons: string[] | null; contact_email: string | null; applicant_note: string | null; influencer_profiles: InfluencerProfile | null }
 type Campaign = { id: string; title: string; description: string; notes: string | null; status: string; budget_range: string | null; timeline: string | null }
 
 function fmt(n: number | null) { if (n == null) return '—'; if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'; if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'; return n.toString() }
@@ -31,9 +31,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <svg width="56" height="56" viewBox="0 0 56 56">
       <circle cx="28" cy="28" r={r} fill="none" stroke="#E2E8F0" strokeWidth="4" />
-      <circle cx="28" cy="28" r={r} fill="none" stroke={scoreColor(score)} strokeWidth="4"
-        strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" transform="rotate(-90 28 28)"
-        style={{ transition: 'stroke-dasharray 0.6s ease' }} />
+      <circle cx="28" cy="28" r={r} fill="none" stroke={scoreColor(score)} strokeWidth="4" strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" transform="rotate(-90 28 28)" style={{ transition: 'stroke-dasharray 0.6s ease' }} />
       <text x="28" y="33" textAnchor="middle" fontSize="13" fontWeight="700" fill={scoreColor(score)}>{score}</text>
     </svg>
   )
@@ -70,9 +68,7 @@ export default function CampaignDetailPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', background: s.bg, fontFamily: '"DM Sans", sans-serif' }}>
       <Nav active="dashboard" />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <p style={{ color: s.faint }}>Loading…</p>
-      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}><p style={{ color: s.faint }}>Loading…</p></div>
     </div>
   )
 
@@ -82,7 +78,7 @@ export default function CampaignDetailPage() {
 
       {/* Campaign header */}
       <div style={{ padding: '16px 24px', borderBottom: `1px solid ${s.border}`, background: s.surface }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+        <div style={{ marginBottom: 4 }}>
           <a href="/dashboard" style={{ fontSize: 12, color: s.muted, textDecoration: 'none' }}>← Dashboard</a>
         </div>
         <h1 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px' }}>{campaign?.title}</h1>
@@ -101,7 +97,6 @@ export default function CampaignDetailPage() {
 
       {/* Split panel */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
-
         {/* Sidebar */}
         <div style={{ width: 300, flexShrink: 0, borderRight: `1px solid ${s.border}`, overflowY: 'auto', background: s.surface, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 4, padding: '10px 12px', borderBottom: `1px solid ${s.border}` }}>
@@ -126,6 +121,11 @@ export default function CampaignDetailPage() {
                   <div style={{ minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px', color: s.text }}>@{handle}</p>
                     <p style={{ fontSize: 11, color: s.faint, margin: 0 }}>{fmt(followers ?? null)} followers</p>
+                    {applicant.applicant_note && (
+                      <p style={{ fontSize: 11, color: s.muted, margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        💬 {applicant.applicant_note}
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                     {applicant.ai_fit_score !== null && <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(applicant.ai_fit_score) }}>{applicant.ai_fit_score}</span>}
@@ -173,6 +173,16 @@ export default function CampaignDetailPage() {
                 ))}
               </div>
 
+              {/* Applicant note — prominent placement */}
+              {selected.applicant_note && (
+                <div style={{ marginBottom: 16, padding: '16px 18px', background: s.accent, border: `1.5px solid ${s.primaryLight}`, borderRadius: 12 }}>
+                  <p style={{ fontSize: 11, color: s.primaryDark, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', fontWeight: 700 }}>
+                    💬 Note from applicant
+                  </p>
+                  <p style={{ fontSize: 14, color: s.text, lineHeight: 1.65, margin: 0 }}>{selected.applicant_note}</p>
+                </div>
+              )}
+
               {/* Fit score */}
               {selected.ai_fit_score !== null && (
                 <div style={{ marginBottom: 16, padding: 16, background: scoreBg(selected.ai_fit_score), borderRadius: 12, border: `1.5px solid ${scoreColor(selected.ai_fit_score)}44` }}>
@@ -210,9 +220,7 @@ export default function CampaignDetailPage() {
               {selected.contact_email && (
                 <div style={{ marginTop: 16, padding: '14px 16px', background: s.accent, border: `1.5px solid ${s.primaryLight}`, borderRadius: 10 }}>
                   <p style={{ fontSize: 11, color: s.primaryDark, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px', fontWeight: 700 }}>Contact email</p>
-                  <a href={`mailto:${selected.contact_email}`} style={{ fontSize: 14, color: s.primary, textDecoration: 'none', fontWeight: 600 }}>
-                    {selected.contact_email}
-                  </a>
+                  <a href={`mailto:${selected.contact_email}`} style={{ fontSize: 14, color: s.primary, textDecoration: 'none', fontWeight: 600 }}>{selected.contact_email}</a>
                   <p style={{ fontSize: 11, color: s.muted, margin: '4px 0 0' }}>Click to open in your email client</p>
                 </div>
               )}

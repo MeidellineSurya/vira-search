@@ -1,6 +1,4 @@
 // src/app/api/campaigns/[id]/applicants/route.ts
-// GET   /api/campaigns/[id]/applicants — list applicants for marketer's campaign
-// PATCH /api/campaigns/[id]/applicants — update application status
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -16,7 +14,6 @@ export async function GET(
 
   const service = createServiceClient()
 
-  // Verify campaign ownership
   const { data: campaign } = await service
     .from('campaigns')
     .select('marketer_id')
@@ -27,11 +24,11 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  // Get applications joined with influencer scraped data + self profile
   const { data, error } = await service
     .from('applications')
     .select(`
-      id, status, applied_at, ai_fit_score, ai_fit_summary, match_reasons, contact_email,
+      id, status, applied_at, ai_fit_score, ai_fit_summary, match_reasons,
+      contact_email, applicant_note,
       influencer_profiles (
         id, ig_handle, niche_tags, short_bio, audience_location,
         influencers (
@@ -64,7 +61,6 @@ export async function PATCH(
 
   const service = createServiceClient()
 
-  // Verify campaign ownership
   const { data: campaign } = await service
     .from('campaigns')
     .select('marketer_id')

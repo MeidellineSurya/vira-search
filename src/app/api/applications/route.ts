@@ -20,7 +20,7 @@ export async function GET() {
   const { data, error } = await service
     .from('applications')
     .select(`
-      id, status, applied_at, ai_fit_score, contact_email,
+      id, status, applied_at, ai_fit_score, contact_email, applicant_note,
       campaigns (
         id, title, description, budget_range, timeline, niche_tags, status
       )
@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Rate limit applications
   const { allowed, resetAt } = await checkRateLimit(req, '/api/applications', user.id)
   if (!allowed) return rateLimitResponse(resetAt)
 
@@ -52,19 +51,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Validate
   const validation = validateApplicationInput(body)
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: validation.status })
   }
 
-  // Sanitise
   const campaign_id    = sanitizeText(body.campaign_id as string, 36)!
   const contact_email  = sanitizeEmail(body.contact_email)
+  const applicant_note = sanitizeText(body.applicant_note as string, 1000)
 
   const service = createServiceClient()
 
-  // Verify influencer profile exists
   const { data: profile } = await service
     .from('influencer_profiles')
     .select('id, influencer_id')
@@ -75,7 +72,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Complete your profile before applying' }, { status: 400 })
   }
 
-  // Check not already applied
   const { data: existing } = await service
     .from('applications')
     .select('id')
@@ -87,16 +83,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Already applied to this campaign' }, { status: 409 })
   }
 
-  // Verify campaign is active
   const { data: campaign } = await service
     .from('campaigns')
     .select('id, status')
     .eq('id', campaign_id)
     .single()
 
-  if (!campaign) {
-    return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
-  }
+  if (!campaign) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
   if (campaign.status !== 'active') {
     return NextResponse.json({ error: 'This campaign is no longer accepting applications' }, { status: 400 })
   }
@@ -105,9 +98,10 @@ export async function POST(req: NextRequest) {
     .from('applications')
     .insert({
       campaign_id,
-      influencer_id: user.id,
-      status: 'pending',
-      contact_email: contact_email ?? null,
+      influencer_id:  user.id,
+      status:         'pending',
+      contact_email:  contact_email ?? null,
+      applicant_note: applicant_note ?? null,
     })
     .select()
     .single()
@@ -118,14 +112,11 @@ export async function POST(req: NextRequest) {
   }
 
   log('info', 'application_submitted', { campaign_id })
-
-  // Auto-score in background
   scoreApplicationInBackground(service, application.id, campaign_id, user.id, profile.influencer_id)
 
   return NextResponse.json({ application }, { status: 201 })
 }
 
-// ── Background scorer ─────────────────────────────────────────────────────────
 async function scoreApplicationInBackground(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   service: any,

@@ -35,17 +35,17 @@ export default function CampaignsPage() {
   const [toast, setToast]               = useState<string | null>(null)
 
   // Modal state
-  const [showModal, setShowModal]       = useState(false)
-  const [modalCampaignId, setModalId]   = useState<string | null>(null)
-  const [contactEmail, setContactEmail] = useState('')
-  const [applyError, setApplyError]     = useState<string | null>(null)
+  const [showModal, setShowModal]         = useState(false)
+  const [modalCampaignId, setModalId]     = useState<string | null>(null)
+  const [contactEmail, setContactEmail]   = useState('')
+  const [applicantNote, setApplicantNote] = useState('')
+  const [applyError, setApplyError]       = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setUserId(data.user.id)
-        // Pre-fill email from auth account
         setContactEmail(data.user.email ?? '')
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
         setUserRole(profile?.role ?? null)
@@ -64,6 +64,7 @@ export default function CampaignsPage() {
     if (userRole !== 'influencer') { showToastMsg('Only influencer accounts can apply to campaigns'); return }
     if (applied.has(campaignId)) return
     setModalId(campaignId)
+    setApplicantNote('')
     setApplyError(null)
     setShowModal(true)
   }
@@ -72,13 +73,16 @@ export default function CampaignsPage() {
     e.preventDefault()
     if (!contactEmail.trim()) { setApplyError('Email is required'); return }
     if (!modalCampaignId) return
-    setApplying(modalCampaignId)
-    setApplyError(null)
+    setApplying(modalCampaignId); setApplyError(null)
 
     const res = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campaign_id: modalCampaignId, contact_email: contactEmail.trim() }),
+      body: JSON.stringify({
+        campaign_id:    modalCampaignId,
+        contact_email:  contactEmail.trim(),
+        applicant_note: applicantNote.trim() || null,
+      }),
     })
     const data = await res.json()
     setApplying(null)
@@ -125,11 +129,7 @@ export default function CampaignsPage() {
               const isApplied  = applied.has(campaign.id)
               const isApplying = applying === campaign.id
               return (
-                <div key={campaign.id} style={{
-                  background: s.surface, border: `1.5px solid ${s.border}`,
-                  borderRadius: 14, padding: '24px', boxShadow: s.shadow,
-                  transition: 'border-color 0.2s',
-                }}
+                <div key={campaign.id} style={{ background: s.surface, border: `1.5px solid ${s.border}`, borderRadius: 14, padding: '24px', boxShadow: s.shadow, transition: 'border-color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = s.primaryLight)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = s.border)}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
@@ -160,19 +160,15 @@ export default function CampaignsPage() {
                         )}
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => handleApply(campaign.id)}
-                      disabled={isApplied || isApplying}
-                      style={{
-                        padding: '10px 20px', borderRadius: 9, fontSize: 13, fontWeight: 700,
-                        cursor: isApplied || isApplying ? 'default' : 'pointer',
-                        whiteSpace: 'nowrap', flexShrink: 0, border: 'none',
-                        transition: 'all 0.15s', fontFamily: 'inherit',
-                        background: isApplied ? '#DCFCE7' : isApplying ? '#F1F5F9' : `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
-                        color: isApplied ? '#15803D' : isApplying ? s.faint : '#fff',
-                        boxShadow: isApplied || isApplying ? 'none' : '0 2px 12px rgba(14,165,233,0.3)',
-                      }}>
+                    <button onClick={() => handleApply(campaign.id)} disabled={isApplied || isApplying} style={{
+                      padding: '10px 20px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                      cursor: isApplied || isApplying ? 'default' : 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0, border: 'none',
+                      transition: 'all 0.15s', fontFamily: 'inherit',
+                      background: isApplied ? '#DCFCE7' : isApplying ? '#F1F5F9' : `linear-gradient(135deg, ${s.primary}, ${s.primaryLight})`,
+                      color: isApplied ? '#15803D' : isApplying ? s.faint : '#fff',
+                      boxShadow: isApplied || isApplying ? 'none' : '0 2px 12px rgba(14,165,233,0.3)',
+                    }}>
                       {isApplied ? '✓ Applied' : isApplying ? 'Applying…' : !userId ? 'Sign up to apply' : 'Apply'}
                     </button>
                   </div>
@@ -185,31 +181,48 @@ export default function CampaignsPage() {
 
       {/* Apply modal */}
       {showModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(30,41,59,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,41,59,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }}
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(30,41,59,0.2)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '32px', width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(30,41,59,0.2)' }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em', color: s.text }}>Apply to campaign</h2>
             <p style={{ fontSize: 14, color: s.muted, margin: '0 0 24px' }}>
-              Enter your contact email so the marketer can reach you if selected.
+              Add your contact details and any notes for the marketer.
             </p>
             <form onSubmit={handleSubmitApplication} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Contact email */}
               <div>
                 <label style={{ fontSize: 12, color: s.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Contact email *
                 </label>
-                <input
-                  type="email" value={contactEmail}
-                  onChange={e => setContactEmail(e.target.value)}
-                  required placeholder="you@example.com" style={input}
+                <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} required placeholder="you@example.com" style={input}
+                  onFocus={e => (e.target.style.borderColor = s.primary)} onBlur={e => (e.target.style.borderColor = s.border)} />
+                <p style={{ fontSize: 11, color: s.faint, margin: '5px 0 0' }}>
+                  Only shared with the marketer if they select you.
+                </p>
+              </div>
+
+              {/* Applicant note */}
+              <div>
+                <label style={{ fontSize: 12, color: s.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Note to marketer <span style={{ color: s.faint, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <textarea
+                  value={applicantNote}
+                  onChange={e => setApplicantNote(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. I'm available weekdays between 10am–4pm. Happy to visit the venue on short notice. I specialise in food photography and short-form video…"
+                  style={{ ...input, resize: 'vertical', lineHeight: 1.6 }}
                   onFocus={e => (e.target.style.borderColor = s.primary)}
                   onBlur={e => (e.target.style.borderColor = s.border)}
                 />
                 <p style={{ fontSize: 11, color: s.faint, margin: '5px 0 0' }}>
-                  Only shared with the marketer if they select you. Not publicly visible.
+                  Use this to share your availability, content style, or anything relevant to this campaign.
                 </p>
               </div>
+
               {applyError && <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{applyError}</p>}
+
               <div style={{ display: 'flex', gap: 10 }}>
                 <button type="submit" disabled={!!applying} style={{
                   flex: 1, padding: '12px', border: 'none', borderRadius: 8,
@@ -222,8 +235,7 @@ export default function CampaignsPage() {
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} style={{
                   padding: '12px 20px', borderRadius: 8, border: `1.5px solid ${s.border}`,
-                  background: 'transparent', color: s.muted, fontSize: 14,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  background: 'transparent', color: s.muted, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   Cancel
                 </button>
@@ -233,14 +245,8 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
-        <div style={{
-          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: s.text, borderRadius: 10, padding: '12px 20px',
-          fontSize: 13, color: '#fff', boxShadow: '0 8px 32px rgba(30,41,59,0.2)',
-          zIndex: 100, whiteSpace: 'nowrap',
-        }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: s.text, borderRadius: 10, padding: '12px 20px', fontSize: 13, color: '#fff', boxShadow: '0 8px 32px rgba(30,41,59,0.2)', zIndex: 100, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}
